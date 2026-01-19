@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # 1. FRONTEND (Nginx)
+  nebula-nginx:
+    image: nginx:alpine
+    container_name: nebula-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-frontend/index.html:/usr/share/nginx/html/index.html
+      - ./nginx-frontend/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - micro-net
+    depends_on:
+      - nebula-python
+      - nebula-node
+
+  # 2. PYTHON API
+  nebula-python:
+    build: ./python-api
+    container_name: nebula-python
+    networks:
+      - micro-net
+    depends_on:
+      - nebula-redis
+
+  # 3. NODE API
+  nebula-node:
+    build: ./node-api
+    container_name: nebula-node
+    networks:
+      - micro-net
+
+  # 4. SYSTEM API
+  nebula-system:
+    image: traefik/whoami
+    container_name: nebula-system
+    networks:
+      - micro-net
+
+  # 5. DATABASE
+  nebula-redis:
+    image: redis:alpine
+    container_name: nebula-redis
+    networks:
+      - micro-net
+
+networks:
+  micro-net:
+    driver: bridge

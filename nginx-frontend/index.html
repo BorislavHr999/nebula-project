@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nebula Microservices</title>
+    <style>
+        body { background: #1a1a1a; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #333; color: #aaa; border: none; padding: 15px 30px; cursor: pointer; font-size: 16px; border-radius: 8px; transition: 0.3s; }
+        .tab-btn.active { background: #007bff; color: white; transform: scale(1.05); }
+        .tab-btn:hover { background: #444; }
+        .content-box { background: #252525; width: 500px; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; min-height: 200px; border: 1px solid #333; }
+        pre { text-align: left; background: #000; padding: 15px; border-radius: 5px; color: #0f0; overflow: auto; }
+        h1 { margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>🌌 Project Nebula</h1>
+    <p>Microservices Dashboard</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="loadService('python')">🐍 Python API</button>
+        <button class="tab-btn" onclick="loadService('node')">🟢 Node.js API</button>
+        <button class="tab-btn" onclick="loadService('system')">⚙️ System Info</button>
+    </div>
+
+    <div class="content-box">
+        <h2 id="title">Select a Service</h2>
+        <div id="loading" style="display:none;">Loading container data...</div>
+        <pre id="output">Click a tab to fetch data.</pre>
+    </div>
+
+    <script>
+        async function loadService(service) {
+            // UI Updates
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('title').innerText = service.toUpperCase() + " SERVICE";
+            document.getElementById('output').innerText = "";
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                // Fetch data from Nginx Proxy
+                // Nginx пренасочва /api/python към контейнера nebula-python
+                const response = await fetch(`/api/${service}`);
+                
+                let data;
+                if (service === 'system') {
+                    data = await response.text(); // System container returns plain text
+                } else {
+                    data = await response.json(); // Others return JSON
+                }
+                
+                document.getElementById('output').innerText = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+            } catch (err) {
+                document.getElementById('output').innerText = "Error connecting to microservice: " + err;
+            }
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        // Load first tab on start
+        loadService('python');
+    </script>
+</body>
+</html>
